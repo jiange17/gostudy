@@ -1,8 +1,15 @@
 package main
 
 import (
+	"os"
 	"fmt"
 	"net"
+	"bytes"
+	"strings"
+)
+
+var (
+	nameMap = make(map[string]bool)
 )
 
 func main() {
@@ -29,6 +36,25 @@ func doServerStuff(conn net.Conn) {
 			fmt.Println("Error reading", err.Error())
 			return
 		}
-		fmt.Printf("Received data: %v\n", string(buf[:len]))
+		index := bytes.IndexAny(buf, "says")
+		name := string(buf[:index])
+		value := string(buf[index+6:len])
+		if _, exist := nameMap[name]; !exist {
+			nameMap[name] = true
+		}
+		value = strings.Trim(value, " ")
+		fmt.Printf("value: %v, value==WHO? %v\n", value, value=="WHO")
+		if value == "WHO" {
+			for name := range nameMap {
+				fmt.Println("name: ", name)
+			}	
+			fmt.Println("End")
+		} else {
+			if value == "SH" {
+				os.Exit(0)
+			} else {
+				fmt.Printf("Received data: %v\n", value)
+			}
+		}
 	}
 }
